@@ -1,13 +1,20 @@
 const electron = require("electron");
 
-const { app, BrowserWindow, Menu } = electron;
+const { app, BrowserWindow, Menu, ipcMain } = electron;
 
 let mainWindow;
 let addTodoWindow;
 
 app.on("ready", () => {
   // Main Window Create
-  mainWindow = new BrowserWindow({});
+  mainWindow = new BrowserWindow({
+    width: 350,
+    height: 640,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
   mainWindow.loadURL(`file://${__dirname}/main.html`);
 
   // NOTE: when app closed force other windows to close
@@ -22,25 +29,37 @@ const createNewWindow = () => {
   addTodoWindow = new BrowserWindow({
     width: 300,
     height: 200,
-    title: "Add new todo",
+    title: "Agregar una tarea",
     resizable: true,
     autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
   });
   addTodoWindow.loadURL(`file://${__dirname}/add-todos.html`);
+
+  // NOTE: Ahorrar memoria al cerrar la ventana
+  addTodoWindow.on("closed", () => (addTodoWindow = null));
 };
+
+ipcMain.on("todo:add", (event, todo) => {
+  mainWindow.webContents.send("todo:add", todo);
+  addTodoWindow.close();
+});
 
 const menuTemplate = [
   {
-    label: "File",
+    label: "Archivo",
     submenu: [
       {
-        label: "New todo",
+        label: "Nueva tarea",
         click() {
           createNewWindow();
         },
       },
       {
-        label: "Quit",
+        label: "Salir",
         // accelerator: "Ctrl+Q", // NOTE: Atajo
         accelerator: (() => {
           if (process.platform === "darwin") {
@@ -67,6 +86,10 @@ if (process.env.NODE_ENV !== "production") {
   menuTemplate.push({
     label: "View",
     submenu: [
+      {
+        role: "reload",
+        accelerator: "F5",
+      },
       {
         label: "More tools",
         submenu: [
