@@ -45,10 +45,18 @@
             list.removeChild(list.firstChild);
           }
         }
+
+        deleteTodos() {
+          this.todos = [];
+          this.clearHTML();
+        }
       }
       const todos = new Todos();
       ipcRenderer.on("todo:add", (event, todo) => {
         todos.addTodo(todo);
+      });
+      ipcRenderer.on("delete:todos", (event, metadata) => {
+        todos.deleteTodos();
       });
     </script>
   </body>

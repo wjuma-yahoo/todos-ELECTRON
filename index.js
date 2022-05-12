@@ -2,6 +2,8 @@ const electron = require("electron");
 
 const { app, BrowserWindow, Menu, ipcMain } = electron;
 
+process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
+
 let mainWindow;
 let addTodoWindow;
 
@@ -43,6 +45,10 @@ const createNewWindow = () => {
   addTodoWindow.on("closed", () => (addTodoWindow = null));
 };
 
+const clearTodos = () => {
+  mainWindow.webContents.send("delete:todos", true);
+};
+
 ipcMain.on("todo:add", (event, todo) => {
   mainWindow.webContents.send("todo:add", todo);
   addTodoWindow.close();
@@ -56,6 +62,12 @@ const menuTemplate = [
         label: "Nueva tarea",
         click() {
           createNewWindow();
+        },
+      },
+      {
+        label: "Borrar",
+        click() {
+          clearTodos();
         },
       },
       {
